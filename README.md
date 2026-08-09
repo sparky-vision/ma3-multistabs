@@ -78,3 +78,7 @@ Fixtures are divided into blocks of the chosen size, distributed across the spec
 ### 9. Wing Shuffle Block Stabs
 
 Fixtures are divided into blocks of the chosen size and arranged with the chosen number of wings. The contiguous blocks are then shuffled, causing the blocks to fire randomly across the specified number of wings.
+
+## How to install
+
+Copy the `multi stabs.xml` file to `gma3_library\datapools\plugins` (On either the USB drive you're using, or if you're using OnPC, it's (probably) in `C:\ProgramData\MALightingTechnology\`. Then in grandMA, use Setup menu -> Show Creator -> Import -> Plugins.
