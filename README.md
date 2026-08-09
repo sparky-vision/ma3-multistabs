@@ -1,4 +1,6 @@
-# Multi Stabs: Function Reference
+# grandMA3 Multi Stabs
+## A grandMA3 programming aid
+## Function reference
 
 **Multi Stabs** is based on an MA2 macro created by (as far as I know) **EarlyBird Visual**. This version duplicates that macro's functionality, in part, but in Lua. The Lua rewrite was done because several functions that the macro relied upon are no longer available in the MA3 macro syntax (such as conditionals.) It simplifies and speeds up the creation of several different lighting stab patterns, while also setting the function of the buttons on the executors.
 
