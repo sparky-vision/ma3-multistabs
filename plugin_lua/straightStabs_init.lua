@@ -2,34 +2,22 @@
 -- Entry point for Straight Stabs and Straight Shuffle Stabs.
 -- Dispatched from multiStabs_menu for selections 1 and 2.
 -- Reads shared.shuffleMode to determine whether to apply Shuffle before XGroup.
+-- Reads shared.seqIndex, already validated in multiStabs_menu before dispatch
+-- (sequence selected, fixtures selected, executor page, cue count) — no need
+-- to re-check any of that here.
 --
 -- Straight Stabs only ever shuffles before XGroup (to randomise fixture-to-group
 -- assignment), so only the "before" case is needed here. "after" is not applicable
 -- to a single-Matricks variant and will never be set by the menu for this component.
 --
--- Order of operations:
---   1. Validate selected sequence
---   2. Present dialog
---   3. Shuffle (if shuffleMode == "before")
---   4. Apply XGroup [steps]
---   5. Grid UseMatricksPositions
---   6. Stash programmer to Sequence 9990
---   7. Stash selection + Matricks to Group 9990
---   8. ClearAll
---   9. Recall Group 9990
---  10. Blind On
---  11. CmdIndirect to straightStabs_run
+-- Note: unlike block variants, Shuffle before a single XGroup command works correctly
+-- without an intermediate Grid UseMatricksPositions call. XGroup operates on whatever
+-- selection order is currently active, which is the shuffled order.
 
 local shared = select(3, ...)
 
 local function main()
-    -- Check for a selected sequence BEFORE presenting the dialog.
-    local seqInfo = SelectedSequence()
-    if not seqInfo or not seqInfo.INDEX then
-        Printf("Straight Stabs: no sequence selected. Please select a sequence and try again.")
-        return
-    end
-    local seqIndex = seqInfo.INDEX
+    local seqIndex = shared.seqIndex
 
     -- Present the user input dialog.
     local resultTable = MessageBox({
@@ -48,60 +36,37 @@ local function main()
         messageTextColor = "Global.Text"
     })
 
-    -- Bail out if the user cancelled.
     if not resultTable.success or resultTable.result == 0 then
         Printf("Straight Stabs: cancelled.")
         return
     end
 
-    -- Validate step count input.
     local steps = tonumber(resultTable.inputs["Steps"])
     if not steps or steps < 1 then
         Printf("Straight Stabs: invalid step count.")
         return
     end
 
-    -- Store seqIndex and steps to the shared state table (Lua-scoped).
-    shared.seqIndex = seqIndex
-    shared.steps    = steps
+    -- seqIndex is already set by multiStabs_menu — only steps needs storing.
+    shared.steps = steps
 
-    -- stepCounter goes to UserVars because it must survive repeated CmdIndirect
-    -- hops back into straightStabs_run.
     SetVar(UserVars(), "MS_stepCounter", 1)
 
     Printf("Straight Stabs: shuffleMode=" .. tostring(shared.shuffleMode) .. ", Steps=" .. steps .. ", Sequence=" .. seqIndex)
 
-    -- Apply Shuffle before XGroup if requested.
-    -- This randomises which fixtures fall into each group.
+    Cmd("Store Sequence 9990 /Overwrite")
+
     if shared.shuffleMode == "before" then
         Cmd("Shuffle")
     end
 
-    -- Divide the selection into N interleaved groups.
     Cmd("Set Selection MAtricks XGroup " .. steps)
-
-    -- Neutralise any Selection Grid influence on selection order.
-    -- Must happen after XGroup is applied and before the stash is stored.
     Cmd("Grid UseMatricksPositions")
-
-    -- Stash the current programmer levels to a temp sequence.
-    -- Recalled on each iteration to force MA3 to see a programmer change.
-    Cmd("Store Sequence 9990 /Overwrite")
-
-    -- Stash the current selection order AND Matricks to a temp group.
-    -- Groups preserve both; sequences do not.
     Cmd("Store Group 9990 /Overwrite")
-
-    -- Clear extraneous programmer data before the loop begins.
     Cmd("ClearAll")
-
-    -- Restore the selection order AND Matricks from the stashed group.
     Cmd("Group 9990")
-
-    -- Enter blind mode so the store loop doesn't cause flashes on stage.
     Cmd("Blind On")
 
-    -- Hand off to the run component to begin the iteration loop.
     CmdIndirect("Plugin 'Multi Stabs'.straightStabs_run")
 end
 

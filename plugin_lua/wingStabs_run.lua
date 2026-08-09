@@ -33,7 +33,7 @@ local function main()
     Cmd("At Sequence 9990 Cue 1")
 
     -- Store and label the current cue.
-    Cmd("Store Sequence " .. seqIndex .. " Cue " .. stepCounter .. " /Merge")
+    Cmd("Store Sequence " .. seqIndex .. " Cue " .. stepCounter .. " /Overwrite")
     Cmd('Label Sequence ' .. seqIndex .. ' Cue ' .. stepCounter .. ' "---"')
 
     SetVar(UserVars(), "MS_stepCounter", stepCounter + 1)

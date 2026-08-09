@@ -46,7 +46,7 @@ local function main()
     Cmd("At Sequence 9990 Cue 1")
 
     -- Store current programmer state to the specified cue
-    Cmd("Store Sequence " .. seqIndex .. " Cue " .. stepCounter .. " /Merge")
+    Cmd("Store Sequence " .. seqIndex .. " Cue " .. stepCounter .. " /Overwrite")
 
     -- Apply a generic placeholder label to the cue
     Cmd('Label Sequence ' .. seqIndex .. ' Cue ' .. stepCounter .. ' "---"')
