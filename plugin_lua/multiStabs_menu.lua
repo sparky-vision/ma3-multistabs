@@ -114,20 +114,22 @@ local function main()
             end
         end
 
-        -- 4. Warning: sequence contains more cues than an "empty" sequence
-        -- would have. MA3 sequences always include a CueZero and an OffCue,
-        -- and Storing to an executor that's never been used adds one more
-        -- empty cue on top of those, so a genuinely empty sequence typically
-        -- shows 2 or 3 cues, not 0. Only counts above that baseline indicate
-        -- real, pre-existing show data that this plugin would merge into.
+        -- 4. Warning: sequence contains more real (non-special) cues than an
+        -- "empty" sequence would have. CueZero and OffCue are always present
+        -- on every MA3 sequence, they're the console's own bookkeeping, not
+        -- something a programmer counts as real show data, so they're
+        -- subtracted out before anything is shown to the user. Storing to an
+        -- executor that's never been used adds one more blank real cue on top
+        -- of the two specials, so a genuinely empty sequence has 0 or 1 real
+        -- cues, not more.
         local cueCount = #seqHandle:Children()
-        if cueCount > 3 then
+        local realCueCount = cueCount - 2
+        if realCueCount > 1 then
             local warnResult = MessageBox({
                 title = "Multi Stabs: Warning",
-                message = "Sequence " .. seqIndex .. " already contains " .. cueCount
-                    .. " cues (more than the 2-3 expected for an empty sequence).\n"
-                    .. "Running this plugin will store into this existing sequence, "
-                    .. "which may overwrite data.\n\nContinue anyway?",
+                message = "Sequence " .. seqIndex .. " already contains " .. realCueCount
+                    .. " cues (more than the 0-1 expected for an empty sequence).\n\n"
+                    .. "Press continue to ERASE AND OVERWRITE the selected sequence, or abort and select a different executor.\n\n",
                 icon = "tools",
                 commands = {
                     { value = 1, name = "Continue" },
@@ -138,6 +140,9 @@ local function main()
                 Printf("Multi Stabs: aborted (sequence already contains cues).")
                 return
             end
+
+            Cmd('Delete Sequence ' .. seqIndex .. ' Cue 1 Thru /NoConfirmation')
+            Printf("Multi Stabs: cleared existing cues 1 thru end on Sequence " .. seqIndex .. ".")
         end
     end
 
